@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "probar": "node probar_servicio.js"
   },
   "engines": {
     "node": ">=18"

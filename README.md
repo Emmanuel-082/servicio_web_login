@@ -28,6 +28,7 @@ EMMANUEL_PORRAS_AA5_EV01/
 ├── validaciones.js    # Reglas de validación de usuario y contraseña
 ├── seguridad.js       # Cifrado y comprobación de contraseñas
 ├── almacen.js         # Guarda y busca usuarios (archivo usuarios.json)
+├── probar_servicio.js # Script de demostración que prueba el servicio encendido
 ├── test/
 │   └── api.test.js    # Pruebas automáticas
 ├── package.json       # Datos del proyecto y comandos
@@ -82,6 +83,17 @@ Los dos `POST` reciben un JSON con esta forma (también se acepta la clave `cont
 | Login con usuario o contraseña incorrectos | 401    | `{"exito": false, "mensaje": "Error en la autenticación: usuario o contraseña incorrectos."}` |
 
 ## Cómo probar el servicio
+
+**Con el script de demostración (lo más fácil):** con el servicio encendido en una terminal,
+abre una **segunda terminal** en la misma carpeta y ejecuta:
+
+```
+node probar_servicio.js
+```
+
+El script hace 7 peticiones reales (registro, registro repetido, contraseña débil, login correcto,
+login con contraseña incorrecta, usuario inexistente y datos incompletos) y muestra qué responde
+el servicio en cada caso. Al final debe decir: `7 de 7 escenarios salieron como se esperaba.`
 
 **Con Postman o Thunder Client (extensión de VS Code):** crea una petición `POST` a
 `http://127.0.0.1:3000/registro`, en *Body* elige *raw* → *JSON* y pega el JSON de ejemplo.
