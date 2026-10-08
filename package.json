@@ -1,0 +1,16 @@
+{
+  "name": "servicio-web-login",
+  "version": "1.0.0",
+  "description": "Servicio web (API REST) de registro e inicio de sesión. Evidencia GA7-220501096-AA5-EV01.",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Emmanuel Porras",
+  "license": "UNLICENSED"
+}

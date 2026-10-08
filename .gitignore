@@ -1,0 +1,20 @@
+# Dependencias (si algún día se instalan paquetes con npm)
+node_modules/
+
+# Datos de los usuarios registrados (se crea solo al usar el servicio)
+usuarios.json
+usuarios.json.tmp
+
+# Configuración local y registros
+.env
+*.log
+
+# Archivos de editores / sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Paquetes de entrega
+*.zip
+*.rar
