@@ -1,0 +1,120 @@
+=====================================================================
+ENDPOINTS DE LA API - SERVICIO WEB DE REGISTRO E INICIO DE SESIÓN
+=====================================================================
+Evidencia: GA7-220501096-AA5-EV02 - API
+Aprendiz:  Emmanuel Porras
+Tecnología: JavaScript (Node.js), sin librerías externas
+
+URL BASE (ejecución local): http://127.0.0.1:3000
+
+Para encender el servicio, desde la carpeta del proyecto:
+    node server.js
+
+
+---------------------------------------------------------------------
+1. RESUMEN DE ENDPOINTS
+---------------------------------------------------------------------
+
+  Método  Endpoint                          Descripción
+  ------  --------------------------------  ------------------------------
+  GET     http://127.0.0.1:3000/            Comprueba que el servicio está activo
+  POST    http://127.0.0.1:3000/registro    Registra un usuario nuevo
+  POST    http://127.0.0.1:3000/login       Inicia sesión (verifica usuario y contraseña)
+
+
+---------------------------------------------------------------------
+2. DETALLE DE CADA ENDPOINT
+---------------------------------------------------------------------
+
+2.1  GET /
+-------------
+Descripción: indica que el servicio está encendido.
+Cuerpo de la petición: ninguno.
+
+Respuesta (HTTP 200):
+{
+  "exito": true,
+  "mensaje": "Servicio web de registro e inicio de sesión en funcionamiento.",
+  "endpoints": { "registro": "POST /registro", "login": "POST /login" }
+}
+
+
+2.2  POST /registro
+-------------------
+Descripción: crea un usuario nuevo. La contraseña se guarda cifrada (hash scrypt),
+nunca en texto plano.
+
+Cabecera:  Content-Type: application/json
+
+Cuerpo de la petición (JSON):
+{
+  "usuario": "emmanuel.porras",
+  "contraseña": "Clave2026"
+}
+(También se acepta la clave "contrasena", sin ñ.)
+
+Reglas de validación:
+  - usuario:    obligatorio; de 4 a 30 caracteres; solo letras, números, punto (.),
+                guion (-) y guion bajo (_). No distingue mayúsculas de minúsculas.
+  - contraseña: obligatoria; de 8 a 128 caracteres; al menos una letra y un número;
+                distinta del usuario.
+
+Respuestas:
+  HTTP 201  Usuario creado
+    { "exito": true, "mensaje": "Usuario registrado correctamente.", "usuario": "emmanuel.porras" }
+
+  HTTP 400  Datos faltantes o inválidos
+    { "exito": false, "mensaje": "Los datos de registro no son válidos.",
+      "errores": { "contraseña": "La contraseña debe tener al menos 8 caracteres." } }
+
+  HTTP 409  El usuario ya existe
+    { "exito": false, "mensaje": "El usuario ya existe. Elige otro nombre." }
+
+
+2.3  POST /login
+----------------
+Descripción: verifica el usuario y la contraseña.
+
+Cabecera:  Content-Type: application/json
+
+Cuerpo de la petición (JSON):
+{
+  "usuario": "emmanuel.porras",
+  "contraseña": "Clave2026"
+}
+
+Reglas de validación: el usuario y la contraseña son obligatorios y deben ser texto.
+
+Respuestas:
+  HTTP 200  Autenticación correcta
+    { "exito": true, "mensaje": "Autenticación satisfactoria.", "usuario": "emmanuel.porras" }
+
+  HTTP 400  Datos faltantes o inválidos
+    { "exito": false, "mensaje": "Los datos de inicio de sesión no son válidos.",
+      "errores": { "contraseña": "La contraseña es obligatoria." } }
+
+  HTTP 401  Error en la autenticación (usuario inexistente o contraseña incorrecta;
+            el mensaje es el mismo en ambos casos para no revelar qué usuarios existen)
+    { "exito": false, "mensaje": "Error en la autenticación: usuario o contraseña incorrectos." }
+
+
+---------------------------------------------------------------------
+3. CÓDIGOS DE RESPUESTA GENERALES
+---------------------------------------------------------------------
+
+  HTTP 400  Cuerpo vacío, JSON mal escrito o datos inválidos
+  HTTP 404  La ruta no existe
+  HTTP 405  Método no permitido (por ejemplo, GET a /login); la cabecera "Allow" indica
+            el método correcto
+  HTTP 413  Cuerpo de la petición demasiado grande (más de 16 KB)
+  HTTP 500  Error interno del servidor
+
+Todas las respuestas, incluidos los errores, se envían en formato JSON.
+
+
+---------------------------------------------------------------------
+4. COLECCIÓN DE POSTMAN
+---------------------------------------------------------------------
+
+Archivo: postman/Servicio_Web_Login.postman_collection.json
+Contiene 10 peticiones con sus pruebas automáticas (tests) listas para ejecutar.

@@ -1,0 +1,548 @@
+{
+  "info": {
+    "name": "Servicio Web Login - AA5-EV02",
+    "description": "Pruebas (testing) del servicio web de registro e inicio de sesión. Evidencia GA7-220501096-AA5-EV02.\n\nCómo usarla:\n1. Enciende el servicio en una terminal con: node server.js\n2. Ejecuta las peticiones en orden (01 a 10), una por una o todas juntas con el Collection Runner.\n\nLa URL base se puede cambiar en la pestaña Variables de la colección (variable baseUrl).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Estado del servicio",
+      "item": [
+        {
+          "name": "01 - Estado del servicio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('La respuesta indica que el servicio está en funcionamiento', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(true);",
+                  "    pm.expect(json.mensaje).to.include('en funcionamiento');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            },
+            "description": "Comprueba que el servicio está encendido.\n\nResultado esperado: HTTP 200 y un mensaje que indica que el servicio está en funcionamiento."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Registro",
+      "item": [
+        {
+          "name": "02 - Registro exitoso",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Crea un usuario de prueba con nombre único para que el registro funcione siempre",
+                  "pm.collectionVariables.set('usuario', 'demo.' + Date.now().toString(36));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 201 (creado)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('El usuario queda registrado correctamente', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(true);",
+                  "    pm.expect(json.mensaje).to.include('registrado correctamente');",
+                  "    pm.expect(json.usuario).to.eql(pm.collectionVariables.get('usuario'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registro"
+              ]
+            },
+            "description": "Registra un usuario nuevo. Antes de enviar, un script crea un nombre de usuario único (demo.xxxxx) para que esta prueba se pueda repetir todas las veces que quieras.\n\nResultado esperado: HTTP 201 y el mensaje \"Usuario registrado correctamente.\"",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"contraseña\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Registro con usuario repetido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 409 (conflicto)', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test('El servicio informa que el usuario ya existe', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.mensaje).to.include('ya existe');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registro"
+              ]
+            },
+            "description": "Intenta registrar de nuevo el mismo usuario de la prueba 02 (ejecútala después de la 02).\n\nResultado esperado: HTTP 409 y el mensaje \"El usuario ya existe. Elige otro nombre.\"",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"contraseña\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Registro con contraseña muy corta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 400 (solicitud incorrecta)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('El error indica el problema con la contraseña', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.errores).to.have.property('contraseña');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registro"
+              ]
+            },
+            "description": "Valida la regla de la contraseña (mínimo 8 caracteres, con letra y número). Se envía \"abc\".\n\nResultado esperado: HTTP 400 y el detalle del error en el campo \"contraseña\".",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}.2\",\n  \"contraseña\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Registro con usuario no válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 400 (solicitud incorrecta)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('El error indica el problema con el usuario', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.errores).to.have.property('usuario');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registro"
+              ]
+            },
+            "description": "Valida la regla del usuario (4 a 30 caracteres; solo letras, números, punto, guion y guion bajo). Se envía \"a b\", que es demasiado corto y tiene un espacio.\n\nResultado esperado: HTTP 400 y el detalle del error en el campo \"usuario\".",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"a b\",\n  \"contraseña\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Inicio de sesión",
+      "item": [
+        {
+          "name": "06 - Inicio de sesión correcto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('La autenticación es satisfactoria', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(true);",
+                  "    pm.expect(json.mensaje).to.eql('Autenticación satisfactoria.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Inicia sesión con el usuario y la contraseña registrados en la prueba 02.\n\nResultado esperado: HTTP 200 y el mensaje \"Autenticación satisfactoria.\"",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"contraseña\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Inicio de sesión con contraseña incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 401 (no autorizado)', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('El servicio devuelve error de autenticación', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.mensaje).to.include('Error en la autenticación');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Usa un usuario que sí existe, pero con una contraseña equivocada.\n\nResultado esperado: HTTP 401 y el mensaje \"Error en la autenticación: usuario o contraseña incorrectos.\"",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\",\n  \"contraseña\": \"ClaveMala999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Inicio de sesión con usuario inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 401 (no autorizado)', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('El servicio devuelve error de autenticación', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.mensaje).to.include('Error en la autenticación');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Usa un usuario que nunca fue registrado. El servicio responde igual que con una contraseña incorrecta, para no revelar qué usuarios existen.\n\nResultado esperado: HTTP 401 y el mismo mensaje de error de autenticación.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"usuario.inexistente\",\n  \"contraseña\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Inicio de sesión sin contraseña",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 400 (solicitud incorrecta)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('El error indica que falta la contraseña', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(json.errores).to.have.property('contraseña');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Envía solo el usuario, sin contraseña.\n\nResultado esperado: HTTP 400 y el detalle del error en el campo \"contraseña\".",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Método no permitido (GET a /login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El código de estado es 405 (método no permitido)', function () {",
+                  "    pm.response.to.have.status(405);",
+                  "});",
+                  "",
+                  "pm.test('La respuesta indica que solo se acepta POST', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.exito).to.eql(false);",
+                  "    pm.expect(pm.response.headers.get('Allow')).to.eql('POST');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Llama a /login con GET en lugar de POST.\n\nResultado esperado: HTTP 405 y la cabecera Allow indicando que solo se acepta POST."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Si todavía no hay un usuario de prueba, se crea uno con nombre único",
+          "if (!pm.collectionVariables.get('usuario')) {",
+          "    pm.collectionVariables.set('usuario', 'demo.' + Date.now().toString(36));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:3000",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "Clave2026",
+      "type": "string"
+    },
+    {
+      "key": "usuario",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
